@@ -1,0 +1,100 @@
+Alex is playing a game in Hackerland and needs to collect coins from various locations. The city is represented as a tree with n vertices labeled from 0 to n - 1, There is an array called coins of size n, where coins[i] is either 0 or 1, where 1 means the vertex contains a coin.
+
+Alex must travel along the tree's edges to collect all the coins. The distance between two vertices is the number of edges between them. From any given vertex x, Alex can collect all coins located within a distance of 2 edges from x.
+
+The goal is to find the shortest path that allows Alex to collect all the coins. Alex can choose any vertex, but must start and end at that vertex. The path can traverse the same edge multiple times, and all edges are bidirectional.
+
+Return the number of edges in the shortest path along which Alex can collect all the coins.
+
+Example tree_nodes =11 tree_to = [1, 2, 6, 3, 4, 10, 5, 7,8,9] tree_from = [0, 0, 0, 1, 1, 3, 4,6,7,8] coin = [0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1,1]   the output is 1->0->6->7->6->0->1
+
+#include <iostream>
+#include <vector>
+#include <queue>
+using namespace std;
+
+int collectTheCoins(const vector<int>& coins, const vector<pair<int, int>>& edges) {
+    int n = coins.size();
+    vector<vector<int>> graph(n);
+    vector<int> degree(n, 0);
+    vector<bool> removed(n, false);
+
+    // Build the graph
+    for (auto& edge : edges) {
+        int u = edge.first;
+        int v = edge.second;
+        graph[u].push_back(v);
+        graph[v].push_back(u);
+        degree[u]++;
+        degree[v]++;
+    }
+
+    // First pass: remove leaves without coins
+    queue<int> q;
+    for (int i = 0; i < n; ++i) {
+        if (degree[i] == 1 && coins[i] == 0) {
+            q.push(i);
+        }
+    }
+
+    while (!q.empty()) {
+        int u = q.front(); q.pop();
+        removed[u] = true;
+        for (int v : graph[u]) {
+            if (removed[v]) continue;
+            degree[v]--;
+            if (degree[v] == 1 && coins[v] == 0) {
+                q.push(v);
+            }
+        }
+    }
+
+    // Second pass: remove leaves twice
+    for (int pass = 0; pass < 2; ++pass) {
+        queue<int> q2;
+        for (int i = 0; i < n; ++i) {
+            if (degree[i] == 1 && !removed[i]) {
+                q2.push(i);
+            }
+        }
+        int size = q2.size();
+        while (size--) {
+            int u = q2.front(); q2.pop();
+            removed[u] = true;
+            for (int v : graph[u]) {
+                if (removed[v]) continue;
+                degree[v]--;
+            }
+        }
+    }
+
+    // Count remaining edges
+    int remaining_edges = 0;
+    for (int u = 0; u < n; ++u) {
+        if (removed[u]) continue;
+        for (int v : graph[u]) {
+            if (u < v && !removed[v]) {
+                remaining_edges++;
+            }
+        }
+    }
+
+    return remaining_edges * 2;
+}
+
+int main() {
+    int tree_nodes = 11;
+    vector<int> tree_to   = {1, 2, 6, 3, 4,10, 5, 7, 8, 9};
+    vector<int> tree_from = {0, 0, 0, 1, 1, 3, 4, 6, 7, 8};
+    vector<int> coins     = {0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1};
+
+    vector<pair<int, int>> edges;
+    for (int i = 0; i < tree_from.size(); ++i) {
+        edges.emplace_back(tree_from[i], tree_to[i]);
+    }
+
+    int result = collectTheCoins(coins, edges);
+    cout << "Minimal edges traversed: " << result << endl;
+
+    return 0;
+}
