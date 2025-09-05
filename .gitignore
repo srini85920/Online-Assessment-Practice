@@ -1,0 +1,11 @@
+# Node modules
+node_modules/
+# Hardhat artifacts
+supply-chain/cache/
+supply-chain/artifacts/
+# Logs
+npm-debug.log*
+# Env files
+.env
+# Build output
+supply-chain/client/dist/
